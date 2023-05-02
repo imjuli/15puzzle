@@ -14,7 +14,7 @@ var targetBoard = [][]int{
 	{13, 14, 15, 0}}
 
 func TestToBoard(t *testing.T) {
-	assert.Equal(t, targetBoard, toBoard(targetSlice))
+	assert.Equal(t, targetBoard, toBoard(targetSlice, 4))
 }
 
 func TestToSlice(t *testing.T) {
@@ -197,8 +197,8 @@ var posAndValidMovesTests = []posAndValidMovesTest{
 
 func TestPositionAndValidMoves(t *testing.T) {
 	for _, test := range posAndValidMovesTests {
-		b := toBoard(test.combination)
-		m := validMoves(b)
+		b := toBoard(test.combination, 4)
+		m := validMoves(b, 4)
 		x, y := position(0, b)
 		if !reflect.DeepEqual(m, test.expValidMoves) || x != test.posX0 || y != test.posY0 {
 			t.Errorf("Puzzle %v : valid moves: %v, expected %v; position of 0: %v %v, expected %v %v",
@@ -210,6 +210,6 @@ func TestPositionAndValidMoves(t *testing.T) {
 func TestWon(t *testing.T) {
 	board = targetBoard
 	assert.True(t, won())
-	board = toBoard([]int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0})
+	board = toBoard([]int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, 4)
 	assert.False(t, won())
 }

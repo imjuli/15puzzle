@@ -10,29 +10,47 @@ import (
 )
 
 const (
-	size            = 4
-	newGameMsg      = "\nWelcome! Your game has started. Print the tile number to make a move, q to quit, n to start a new game. Good luck!"
-	invalidInputMsg = "Unrecognized input, try q, n or tile number"
-	invalidTileMsg  = "Tile does not exist, try numbers from 1 to"
-	invalidMoveMsg  = "Move is not allowed. Valid moves:"
-	wonMsg          = "🎉🎉🎉 Congratulations! You won! 🎉🎉🎉\n "
-	quitKey         = "q"
-	newGameKey      = "n"
+	sizeMsg           = "Enter desired puzzle size: "
+	newGameMsg        = "\nWelcome! Your game has started. Print the tile number to make a move, q to quit, n to start a new game. Good luck!"
+	invalidInputMsg   = "Unrecognized input, try q, n or tile number"
+	invalidIntegerMsg = "Invalid size value. Try positive integers"
+	invalidTileMsg    = "Tile does not exist, try numbers from 1 to"
+	invalidMoveMsg    = "Move is not allowed. Valid moves:"
+	wonMsg            = "🎉🎉🎉 Congratulations! You won! 🎉🎉🎉 Press n to start a new game or q to quit\n "
+	quitKey           = "q"
+	newGameKey        = "n"
 )
 
 var (
 	board       = [][]int{}
+	size        int
 	targetSlice = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}
 )
+
+func readSize() {
+	var sizeInput int
+	fmt.Print(sizeMsg)
+	for {
+		_, err := fmt.Scan(&sizeInput)
+		if err != nil || sizeInput <= 0 {
+			fmt.Println(invalidIntegerMsg)
+			continue
+		} else {
+			break
+		}
+	}
+	size = sizeInput
+}
 
 func main() {
 
 	var (
-		input string
-		num   int
+		input   string
+		tileNum int
 	)
 
-	newGame()
+	readSize()
+	newGame(size)
 
 	for {
 		fmt.Print("> ")
@@ -43,23 +61,24 @@ func main() {
 		if input == quitKey {
 			os.Exit(0)
 		} else if input == newGameKey {
-			newGame()
+			readSize()
+			newGame(size)
 		} else {
-			num, err = strconv.Atoi(input)
+			tileNum, err = strconv.Atoi(input)
 			if err != nil {
 				fmt.Println(invalidInputMsg)
 				continue
 			}
-			if num <= 0 || num > size*size-1 {
+			if tileNum <= 0 || tileNum > size*size-1 {
 				fmt.Println(invalidTileMsg, size*size-1)
 				continue
 			}
-			if vm := validMoves(board); !contains(vm, num) {
+			if vm := validMoves(board, size); !contains(vm, tileNum) {
 				fmt.Println(invalidMoveMsg, vm)
 				continue
 			}
 
-			board = move(num, board)
+			board = move(tileNum, board)
 			drawBoard()
 
 			if won() {
@@ -69,9 +88,9 @@ func main() {
 	}
 }
 
-func newGame() {
+func newGame(size int) {
 	fmt.Println(newGameMsg)
-	board = toBoard(genCombination(size))
+	board = toBoard(genCombination(size), size)
 	drawBoard()
 }
 
@@ -86,7 +105,7 @@ func genCombination(size int) []int {
 	return c
 }
 
-func toBoard(nums []int) [][]int {
+func toBoard(nums []int, size int) [][]int {
 	b := make([][]int, size)
 	for i := range b {
 		b[i] = make([]int, size)
@@ -98,13 +117,14 @@ func toBoard(nums []int) [][]int {
 }
 
 func drawBoard() {
+	format := `%-` + strconv.Itoa(len(strconv.Itoa(size*size))+1) + "v"
 	fmt.Println()
 	for i := range board {
 		for j := range board[i] {
 			if board[i][j] == 0 {
-				fmt.Printf("%-3s", " ")
+				fmt.Printf(format, " ")
 			} else {
-				fmt.Printf("%-3d", board[i][j])
+				fmt.Printf(format, board[i][j])
 			}
 		}
 		fmt.Println()
@@ -123,7 +143,7 @@ func position(num int, board [][]int) (x, y int) {
 	return -1, -1
 }
 
-func validMoves(b [][]int) []int {
+func validMoves(b [][]int, size int) []int {
 	x, y := position(0, b)
 	moves := []int{}
 	if x < 0 || y < 0 {
@@ -193,7 +213,7 @@ func isSolvable(sl []int, size int) bool {
 	if size%2 == 1 {
 		return invCount%2 == 0
 	} else {
-		b := toBoard(sl)
+		b := toBoard(sl, size)
 		x0, _ := position(0, b)
 		x0b := size - x0 // row of the blank from the bottom
 		if x0b%2 == 1 {
